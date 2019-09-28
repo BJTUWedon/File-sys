@@ -581,32 +581,36 @@ def uploadFile(request):
             name = os.path.splitext(file_obj.name)[0]
             address = os.path.splitext(file_obj.name)[-1]
             src = hash_code(name)+address #到时候修改成服务器的地址
+            print("FIletype:"+address)
             print(src)
             if id == "-1":
-                if address == '.pdf'or'.PDF': #切片操作
+                if address == '.pdf' or address == '.PDF': #切片操作
                     with open(src, 'wb')as f:
                         for ffile in file_obj.chunks():
                             f.write(ffile)
                     inputpdf = PdfFileReader(open(src, "rb"))
                     output = PdfFileWriter()
-                    for i in range(inputpdf.numPages):
-                        output.addPage(inputpdf.getPage(i))
-                    pdf_bytes = io.BytesIO()
-                    output.write(pdf_bytes)
-                    pdf_bytes.seek(0)
-                    img = Image(file=pdf_bytes, resolution=300)
-                    img.format = 'JPEG'
-                    img.compression_quality = 92
-                    img.background_color = Color("white")
-                    img.save(filename=src + "-page.jpeg")
-                    # img.save(filename=src + "-page%s.jpeg" % (i + 1))
-                    img.destroy()
+                    print("1")
                     # for i in range(inputpdf.numPages):
                     #     output.addPage(inputpdf.getPage(i))
-                        # pagesrc = src+"-page%s.pdf" % (i+1)
-                        # print(pagesrc)
-                        # with open(pagesrc, "wb") as outputStream: #页码
-                        #     output.write(outputStream)
+                    # pdf_bytes = io.BytesIO()
+                    # output.write(pdf_bytes)
+                    # pdf_bytes.seek(0)
+                    # img = Image(file=pdf_bytes, resolution=300)
+                    # img.format = 'JPEG'
+                    # img.compression_quality = 92
+                    # img.background_color = Color("white")
+                    # img.save(filename=src + "-page.jpeg")
+                    # # img.save(filename=src + "-page%s.jpeg" % (i + 1))
+                    # img.destroy()
+                    for i in range(inputpdf.numPages):
+                        output.addPage(inputpdf.getPage(i))
+                        # output.encrypt(user_pwd="wyd",owner_pwd="None",use_128bit=True,allow_printing=False, allow_commenting=False,overwrite_permission=False)
+                        pagesrc = src+"-page%s.pdf" % (i+1)
+                        print(pagesrc)
+                        with open(pagesrc, "wb") as outputStream: #页码
+                            output.write(outputStream)
+                    File.objects.create(filename=title, type=type, content=content, createDate=datetime.datetime.now(),src=r"http://lvmaozi.info:9999/" + src,group=group)
 
                     # for img in sorted(glob.glob(src+'*'))
                     #     imgdoc = fitz.open(img)
@@ -616,19 +620,21 @@ def uploadFile(request):
                     # doc.save(".pdf")
                     # doc.close()
                 else:
-                    print('no')
+                    print('no video')
                     with open(src, 'wb')as f:
                         for ffile in file_obj.chunks():
                             f.write(ffile)
-                if address == '.avi' or'.AVI'or '.asf'or'.ASF' or '.wav'or'.WAV' or '.flv'or'.FLV' or '.siff'or'.SIFF':
-                    convert_video(src,hash_code(name)+'.mp4')
-                    # time.sleep(5)
-                    os.remove(src)
-                    newsrc = hash_code(name)+'.mp4'
-                    # type = 'mp4'
-                    File.objects.create(filename=title, type=type, content=content,createDate=datetime.datetime.now(), src=r"http://lvmaozi.info:9999/"+newsrc,group=group)#我认为下面还要返回id
-                else:
-                    File.objects.create(filename=title, type=type, content=content, createDate=datetime.datetime.now(),src=r"http://lvmaozi.info:9999/" + src,group=group)
+                    if address == '.avi' or address =='.AVI'or address =='.asf'or address =='.ASF' or address =='.wav'or address =='.WAV' or address =='.flv'or address =='.FLV' or address =='.siff'or address =='.SIFF':
+                        print("filetype: video")
+                        convert_video(src,hash_code(name)+'.mp4')
+                        # time.sleep(5)
+                        os.remove(src)
+                        newsrc = hash_code(name)+'.mp4'
+                        File.objects.create(filename=title, type=type, content=content,createDate=datetime.datetime.now(), src=r"http://lvmaozi.info:9999/"+newsrc,group=group)#我认为下面还要返回id
+                    else:#不准确
+                        print("filetype:img")
+                        File.objects.create(filename=title, type=type, content=content, createDate=datetime.datetime.now(),src=r"http://lvmaozi.info:9999/" + src,group=group)
+
                 lastFile = File.objects.order_by("-createDate")[0:1].get()
                 id = lastFile.id
                 print(id)
@@ -641,19 +647,23 @@ def uploadFile(request):
                         output.addPage(inputpdf.getPage(i))
                         with open(src+"-page%s.pdf" % i, "wb") as outputStream: #页码
                             output.write(outputStream)
+                    File.objects.filter(id=id).update(filename=title, type=type, content=content,createDate=datetime.datetime.now(),src=r"http://lvmaozi.info:9999/"+src,group=group)
                 else:
                     with open(src, 'wb')as f:
                         for ffile in file_obj.chunks():
                             f.write(ffile)
-                if address == '.avi' or address == '.asf' or address == '.wav' or address == '.flv' or address == '.siff' or address == '.asf':
-                    convert_video(src,hash_code(name)+'.mp4')
-                    # time.sleep(5)
-                    os.remove(src)
-                    newsrc = hash_code(name)+'.mp4'
-                    # type = 'mp4'
-                    File.objects.create(filename=title, type=type, content=content,createDate=datetime.datetime.now(), src=r"http://lvmaozi.info:9999/"+newsrc,group=group)#我认为下面还要返回id
-                else:
-                    File.objects.filter(id=id).update(filename=title, type=type, content=content,createDate=datetime.datetime.now(),src=r"http://lvmaozi.info:9999/"+src,group=group)
+                    if address == '.avi' or address =='.AVI'or address =='.asf'or address =='.ASF' or address =='.wav'or address =='.WAV' or address =='.flv'or address =='.FLV' or address =='.siff'or address =='.SIFF':
+                        convert_video(src,hash_code(name)+'.mp4')
+                        # time.sleep(5)
+                        os.remove(src)
+                        newsrc = hash_code(name)+'.mp4'
+                        File.objects.create(filename=title, type=type, content=content,createDate=datetime.datetime.now(), src=r"http://lvmaozi.info:9999/"+newsrc,group=group)#我认为下面还要返回id
+                    if address == '.jpg' or address == '.JPG' or address == '.png' or address == '.PNG' or address == '.gif' or address == '.GIF':#不准确
+                        print("filetype:img")
+                        File.objects.create(filename=title, type=type, content=content, createDate=datetime.datetime.now(),src=r"http://lvmaozi.info:9999/" + src,group=group)
+                    else:
+                        print("error")
+                        success = False
                 Data = {"title": title, "id": str(id), "type": type}
         except Exception as e:
             success = False
@@ -851,7 +861,9 @@ def getFile(request):
                         username_id = Fileinfo.username_id
                         time = Fileinfo.time
                         authUserList = [{"id": str(username_id), "limit":float(time)}]
-                    Data = {"id":str(id),"title":title,"content":content,"src":src,"createDate":createDate,"type":type,"authUserList":authUserList,"limit":math.ceil(float(limit))}
+                    Data = {"id":str(id),"title":title,"content":content,"src":src,"createDate":createDate,"type":type,"authUserList":authUserList,"limit":float(limit)}
+                    print("普通账户")
+                    print(limit)
                 except Exception as e:
                     # print(3)
                     # success = False
@@ -883,6 +895,8 @@ def getFile(request):
                         authUserList = [{"id": str(username_id), "limit": float(time)}]
                     Data = {"id": str(id), "title": title, "content": content, "src": src, "createDate": createDate,
                                 "type": type, "authUserList": authUserList, "limit": math.ceil(float(limit))}
+                    print("管理员账户")
+                    print(limit)
         except Exception as e:
             success = False
             Data = str(e)
@@ -1002,4 +1016,3 @@ def deleteFolder(request):
             success = False
             Data = str(e)
         return JsonResponse({"success": success, "data": Data})
-
